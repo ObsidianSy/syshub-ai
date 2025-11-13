@@ -48,11 +48,14 @@ export const ResponseCarousel = ({ responses, onResponseClick }: ResponseCarouse
 
   if (responses.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center bg-gradient-to-br from-card to-card/50 rounded-lg border">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <Sparkles className="h-12 w-12 mx-auto mb-4 text-primary animate-glow-pulse" />
-          <p className="text-muted-foreground">
-            As respostas do agente aparecerão aqui
+          <Sparkles className="h-16 w-16 mx-auto mb-6 text-white/60 animate-glow-pulse" />
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Central de Sistemas
+          </h2>
+          <p className="text-white/70 text-lg">
+            Faça uma pergunta sobre qualquer sistema e o agente vai buscar as informações para você
           </p>
         </div>
       </div>
@@ -60,22 +63,15 @@ export const ResponseCarousel = ({ responses, onResponseClick }: ResponseCarouse
   }
 
   return (
-    <div className="relative h-full bg-gradient-to-br from-card to-card/50 rounded-lg border overflow-hidden">
-      <div className="absolute top-4 left-4 z-10">
-        <Badge className="bg-primary/20 text-primary border-primary/30">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Respostas do Agente
-        </Badge>
-      </div>
-
+    <div className="relative h-full">
       {canScrollLeft && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-card/80 backdrop-blur"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-full glass-effect hover:bg-white/20 text-white h-12 w-12"
           onClick={() => scroll("left")}
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-6 w-6" />
         </Button>
       )}
 
@@ -83,17 +79,17 @@ export const ResponseCarousel = ({ responses, onResponseClick }: ResponseCarouse
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-card/80 backdrop-blur"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-full glass-effect hover:bg-white/20 text-white h-12 w-12"
           onClick={() => scroll("right")}
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-6 w-6" />
         </Button>
       )}
 
-      <ScrollArea className="h-full pt-16">
+      <ScrollArea className="h-full">
         <div
           ref={scrollRef}
-          className="flex gap-4 px-6 pb-6 overflow-x-auto scrollbar-hide"
+          className="flex gap-6 px-12 py-12 overflow-x-auto scrollbar-hide items-center"
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
@@ -102,7 +98,7 @@ export const ResponseCarousel = ({ responses, onResponseClick }: ResponseCarouse
           {responses.map((response, idx) => (
             <Card
               key={response.id}
-              className="min-w-[350px] max-w-[350px] cursor-pointer transition-all hover:shadow-xl hover:scale-105 hover:-translate-y-1 animate-card-3d border-primary/20 bg-gradient-to-br from-card to-card/80"
+              className="min-w-[400px] max-w-[400px] cursor-pointer transition-all hover:scale-105 hover:-translate-y-2 animate-card-3d glass-effect border-white/20 shadow-2xl"
               style={{
                 animationDelay: `${idx * 0.1}s`,
                 transform: "perspective(1000px)",
@@ -111,10 +107,10 @@ export const ResponseCarousel = ({ responses, onResponseClick }: ResponseCarouse
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-3">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge className="bg-primary/20 text-primary border-primary/30">
                     {response.systemName}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-white/60">
                     {response.timestamp.toLocaleTimeString('pt-BR', { 
                       hour: '2-digit', 
                       minute: '2-digit' 
@@ -122,16 +118,17 @@ export const ResponseCarousel = ({ responses, onResponseClick }: ResponseCarouse
                   </span>
                 </div>
                 
-                <h3 className="font-semibold mb-2 text-lg line-clamp-2">
+                <h3 className="font-semibold mb-3 text-xl line-clamp-2 text-white">
                   {response.title}
                 </h3>
                 
-                <p className="text-sm text-muted-foreground line-clamp-3">
+                <p className="text-sm text-white/80 line-clamp-4 leading-relaxed">
                   {response.content}
                 </p>
                 
-                <div className="mt-4 text-xs text-primary font-medium">
-                  Clique para ver mais →
+                <div className="mt-4 text-xs text-primary font-medium flex items-center gap-2">
+                  Clique para ver mais
+                  <Sparkles className="h-3 w-3" />
                 </div>
               </CardContent>
             </Card>

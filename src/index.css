@@ -48,21 +48,17 @@ All colors MUST be HSL.
     --info: 200 100% 45%;
     --info-foreground: 0 0% 100%;
 
-    --tech-gradient: linear-gradient(135deg, hsl(200 100% 45%), hsl(200 100% 60%));
-    --card-gradient: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    --glow-shadow: 0 0 20px hsl(200 100% 60% / 0.3);
-    --card-shadow: 0 4px 6px -1px hsl(222 47% 11% / 0.1), 0 2px 4px -1px hsl(222 47% 11% / 0.06);
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
+    --gradient-1: 220 100% 60%;
+    --gradient-2: 280 100% 70%;
+    --gradient-3: 340 100% 65%;
+    --gradient-4: 20 100% 60%;
   }
 
   .dark {
     --background: 222 47% 7%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 10%;
+    --card: 222 47% 12%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222 47% 10%;
@@ -97,14 +93,10 @@ All colors MUST be HSL.
     --info: 200 100% 55%;
     --info-foreground: 0 0% 100%;
 
-    --tech-gradient: linear-gradient(135deg, hsl(200 100% 45%), hsl(200 100% 65%));
-    --card-gradient: linear-gradient(135deg, hsl(222 47% 10%), hsl(222 47% 12%));
-    --glow-shadow: 0 0 30px hsl(200 100% 55% / 0.4);
-    --card-shadow: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
-
-    --sidebar-background: 222 47% 9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 20%;
+    --gradient-1: 220 100% 40%;
+    --gradient-2: 280 100% 50%;
+    --gradient-3: 340 100% 45%;
+    --gradient-4: 20 100% 40%;
   }
 }
 
@@ -115,5 +107,36 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-1)) 0%,
+      hsl(var(--gradient-2)) 25%,
+      hsl(var(--gradient-3)) 50%,
+      hsl(var(--gradient-4)) 100%
+    );
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .glass-effect {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }

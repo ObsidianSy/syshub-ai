@@ -10,13 +10,13 @@ interface HeaderProps {
 
 export const Header = ({ isDark, onThemeToggle, isConnected }: HeaderProps) => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-black/20 border-b border-white/10">
       <div className="flex h-16 items-center justify-between px-6">
         <div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold text-white">
             Central de Sistemas
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-white/60">
             Hub de documentação conectado ao agente de IA
           </p>
         </div>
@@ -24,7 +24,7 @@ export const Header = ({ isDark, onThemeToggle, isConnected }: HeaderProps) => {
         <div className="flex items-center gap-4">
           <Badge 
             variant={isConnected ? "default" : "destructive"}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-white/10 border-white/20 text-white"
           >
             {isConnected ? (
               <>
@@ -43,7 +43,7 @@ export const Header = ({ isDark, onThemeToggle, isConnected }: HeaderProps) => {
             variant="ghost"
             size="icon"
             onClick={onThemeToggle}
-            className="rounded-full"
+            className="rounded-full hover:bg-white/10 text-white"
           >
             {isDark ? (
               <Sun className="h-5 w-5" />
