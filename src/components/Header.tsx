@@ -1,6 +1,7 @@
 import { Moon, Sun, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import nexusHubLogo from "@/assets/nexushub-logo.png";
 
 interface HeaderProps {
   isDark: boolean;
@@ -12,13 +13,16 @@ export const Header = ({ isDark, onThemeToggle, isConnected }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-black/20 border-b border-white/10">
       <div className="flex h-16 items-center justify-between px-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">
-            Central de Sistemas
-          </h1>
-          <p className="text-xs text-white/60">
-            Hub de documentação conectado ao agente de IA
-          </p>
+        <div className="flex items-center gap-3">
+          <img src={nexusHubLogo} alt="NexusHub" className="h-10 w-10" />
+          <div>
+            <h1 className="text-2xl font-bold text-white">
+              NexusHub
+            </h1>
+            <p className="text-xs text-white/60">
+              Central inteligente de sistemas
+            </p>
+          </div>
         </div>
         
         <div className="flex items-center gap-4">
