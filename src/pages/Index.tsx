@@ -104,9 +104,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex flex-col relative overflow-hidden">
-      {/* Efeito de blur adicional */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
+    <div className="min-h-screen space-bg flex flex-col relative overflow-hidden">
+      {/* Vignette effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 pointer-events-none" />
       
       <Header 
         isDark={isDark} 
