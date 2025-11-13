@@ -3,6 +3,8 @@ import { Header } from "@/components/Header";
 import { ChatInput } from "@/components/ChatInput";
 import { ResponseCarousel, AgentResponse } from "@/components/ResponseCarousel";
 import { ResponseModal } from "@/components/ResponseModal";
+import { QueryHistory, HistoryItem } from "@/components/QueryHistory";
+import { StatusPanel } from "@/components/StatusPanel";
 import { mockSystems } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -13,7 +15,11 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [responses, setResponses] = useState<AgentResponse[]>([]);
   const [selectedResponse, setSelectedResponse] = useState<AgentResponse | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const { toast } = useToast();
+
+  const onlineSystems = mockSystems.filter(s => s.status === "online").length;
+  const lastUpdate = new Date();
 
   useEffect(() => {
     if (isDark) {
@@ -73,6 +79,18 @@ const Index = () => {
         };
 
         setResponses(prev => [...prev, newResponse]);
+        
+        // Adicionar ao histórico
+        const historyItem: HistoryItem = {
+          id: newResponse.id,
+          systemName: newResponse.systemName,
+          question: message,
+          summary: newResponse.content.substring(0, 100) + "...",
+          timestamp: newResponse.timestamp,
+          isFavorite: false,
+        };
+        setHistory(prev => [...prev, historyItem]);
+        
         setIsConnected(true);
       } else {
         // Mock response para demonstração
@@ -86,6 +104,18 @@ const Index = () => {
           };
           
           setResponses(prev => [...prev, newResponse]);
+          
+          // Adicionar ao histórico
+          const historyItem: HistoryItem = {
+            id: newResponse.id,
+            systemName: newResponse.systemName,
+            question: message,
+            summary: newResponse.content.substring(0, 100) + "...",
+            timestamp: newResponse.timestamp,
+            isFavorite: false,
+          };
+          setHistory(prev => [...prev, historyItem]);
+          
           setIsLoading(false);
         }, 1500);
         return;
@@ -103,6 +133,21 @@ const Index = () => {
     }
   };
 
+  const handleHistoryItemClick = (item: HistoryItem) => {
+    const response = responses.find(r => r.id === item.id);
+    if (response) {
+      setSelectedResponse(response);
+    }
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    setHistory(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+      )
+    );
+  };
+
   return (
     <div className="min-h-screen space-bg flex flex-col relative overflow-hidden">
       {/* Vignette effect */}
@@ -114,9 +159,24 @@ const Index = () => {
         isConnected={isConnected}
       />
       
-      <main className="flex-1 flex flex-col pt-16 relative z-10">
+      <QueryHistory 
+        items={history}
+        onItemClick={handleHistoryItemClick}
+        onToggleFavorite={handleToggleFavorite}
+      />
+      
+      <main className="flex-1 flex flex-col pt-16 pl-80 relative z-10 transition-all duration-300">
+        {/* Painel de Status */}
+        <div className="px-6 pt-6">
+          <StatusPanel 
+            totalSystems={mockSystems.length}
+            onlineSystems={onlineSystems}
+            lastUpdate={lastUpdate}
+          />
+        </div>
+        
         {/* Área grande para respostas 3D */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden px-6">
           {isLoading && responses.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center z-20">
               <div className="flex flex-col items-center gap-4 text-white">
