@@ -28,24 +28,22 @@ const Index = () => {
   }, [isDark]);
 
   const handleSendMessage = async (message: string) => {
-    if (!selectedSystem) {
-      toast({
-        title: "Sistema não selecionado",
-        description: "Por favor, selecione um sistema antes de enviar uma mensagem",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     
     // Simular chamada ao webhook (substituir pela URL real do n8n)
     const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || "";
     
+    // Enviar todos os sistemas disponíveis para o agente decidir qual usar
     const payload = {
-      system_id: selectedSystem.id,
-      system_name: selectedSystem.name,
       user_question: message,
+      available_systems: mockSystems.map(sys => ({
+        id: sys.id,
+        name: sys.name,
+        slug: sys.slug,
+        category: sys.category,
+        status: sys.status,
+        description: sys.description,
+      })),
       conversation_history: responses.map(r => ({
         role: "assistant",
         content: r.content,
@@ -75,7 +73,7 @@ const Index = () => {
           title: message.substring(0, 50) + (message.length > 50 ? "..." : ""),
           content: data.answer || "Resposta do agente",
           timestamp: new Date(),
-          systemName: selectedSystem.name,
+          systemName: data.system_used || "Agente IA",
         };
 
         setResponses(prev => [...prev, newResponse]);
@@ -86,9 +84,9 @@ const Index = () => {
           const newResponse: AgentResponse = {
             id: Date.now().toString(),
             title: message.substring(0, 50) + (message.length > 50 ? "..." : ""),
-            content: `Esta é uma resposta simulada do agente sobre "${message}" no sistema ${selectedSystem.name}.\n\nPara conectar ao agente real, configure a variável de ambiente VITE_N8N_WEBHOOK_URL com a URL do seu webhook do n8n.\n\nO agente pode responder sobre fluxos, APIs, integrações e qualquer dúvida sobre os sistemas cadastrados.`,
+            content: `Esta é uma resposta simulada do agente sobre "${message}".\n\nO agente identificou que você está perguntando sobre um sistema específico e buscaria as informações no banco de dados correspondente.\n\nPara conectar ao agente real, configure a variável de ambiente VITE_N8N_WEBHOOK_URL com a URL do seu webhook do n8n.\n\nO agente receberá:\n- Sua pergunta\n- Lista de todos os sistemas disponíveis\n- Histórico da conversa\n\nE retornará:\n- A resposta com os dados solicitados\n- Qual sistema foi consultado (campo "system_used")`,
             timestamp: new Date(),
-            systemName: selectedSystem.name,
+            systemName: "Agente IA",
           };
           
           setResponses(prev => [...prev, newResponse]);

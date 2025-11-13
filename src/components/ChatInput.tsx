@@ -29,7 +29,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   return (
     <form onSubmit={handleSubmit} className="border-t bg-card p-4">
       <div className="text-xs text-muted-foreground mb-2">
-        Digite sua pergunta para o agente
+        Pergunte qualquer coisa sobre os sistemas (ex: "vá no Opus One e me traga o estoque de produtos")
       </div>
       <div className="flex gap-2">
         <Textarea
