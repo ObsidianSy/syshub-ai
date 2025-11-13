@@ -104,32 +104,35 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen gradient-bg flex flex-col relative overflow-hidden">
+      {/* Efeito de blur adicional */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
+      
       <Header 
         isDark={isDark} 
         onThemeToggle={() => setIsDark(!isDark)}
         isConnected={isConnected}
       />
       
-      <main className="flex-1 flex flex-col pt-16 overflow-hidden">
+      <main className="flex-1 flex flex-col pt-16 relative z-10">
         {/* Área grande para respostas 3D */}
-        <div className="flex-1 p-6 overflow-hidden">
+        <div className="flex-1 overflow-hidden">
+          {isLoading && responses.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center z-20">
+              <div className="flex flex-col items-center gap-4 text-white">
+                <Loader2 className="h-12 w-12 animate-spin" />
+                <span className="text-lg">Consultando agente...</span>
+              </div>
+            </div>
+          )}
           <ResponseCarousel
             responses={responses}
             onResponseClick={setSelectedResponse}
           />
         </div>
         
-        {/* Área do chat */}
-        <div className="h-[200px] border-t relative">
-          {isLoading && (
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
-              <div className="flex items-center gap-2 text-primary">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Consultando agente...</span>
-              </div>
-            </div>
-          )}
+        {/* Área do chat fixo embaixo */}
+        <div className="pb-6">
           <ChatInput
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
