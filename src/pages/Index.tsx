@@ -1,18 +1,14 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
-import { SystemSidebar } from "@/components/SystemSidebar";
-import { DocumentationTabs } from "@/components/DocumentationTabs";
 import { ChatInput } from "@/components/ChatInput";
 import { ResponseCarousel, AgentResponse } from "@/components/ResponseCarousel";
 import { ResponseModal } from "@/components/ResponseModal";
-import { System } from "@/components/SystemCard";
 import { mockSystems } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const [isDark, setIsDark] = useState(true);
-  const [selectedSystem, setSelectedSystem] = useState<System | null>(null);
   const [isConnected, setIsConnected] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [responses, setResponses] = useState<AgentResponse[]>([]);
@@ -108,50 +104,38 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header 
         isDark={isDark} 
         onThemeToggle={() => setIsDark(!isDark)}
         isConnected={isConnected}
       />
       
-      <div className="flex pt-16 h-screen">
-        <SystemSidebar
-          systems={mockSystems}
-          selectedSystemId={selectedSystem?.id || null}
-          onSystemSelect={setSelectedSystem}
-        />
+      <main className="flex-1 flex flex-col pt-16 overflow-hidden">
+        {/* Área grande para respostas 3D */}
+        <div className="flex-1 p-6 overflow-hidden">
+          <ResponseCarousel
+            responses={responses}
+            onResponseClick={setSelectedResponse}
+          />
+        </div>
         
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 p-6 overflow-auto">
-            <DocumentationTabs system={selectedSystem} />
-          </div>
-          
-          <div className="h-[400px] border-t">
-            <div className="h-[55%] border-b">
-              <ResponseCarousel
-                responses={responses}
-                onResponseClick={setSelectedResponse}
-              />
+        {/* Área do chat */}
+        <div className="h-[200px] border-t relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
+              <div className="flex items-center gap-2 text-primary">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Consultando agente...</span>
+              </div>
             </div>
-            
-            <div className="h-[45%] relative">
-              {isLoading && (
-                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
-                  <div className="flex items-center gap-2 text-primary">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Consultando agente...</span>
-                  </div>
-                </div>
-              )}
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-              />
-            </div>
-          </div>
-        </main>
-      </div>
+          )}
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+          />
+        </div>
+      </main>
 
       <ResponseModal
         response={selectedResponse}
