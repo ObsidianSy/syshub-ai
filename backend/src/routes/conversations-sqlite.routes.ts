@@ -48,6 +48,11 @@ router.post('/', async (req: AuthRequest, res) => {
 
     console.log('💬 Conversation created:', conversation);
 
+    if (!conversation) {
+      console.error('❌ Failed to retrieve conversation after insert');
+      return res.status(500).json({ error: 'Falha ao criar conversa' });
+    }
+
     res.status(201).json(conversation);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
