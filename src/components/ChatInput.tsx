@@ -7,9 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
-export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
+export const ChatInput = ({ onSendMessage, isLoading, disabled = false, placeholder = "Digite sua mensagem..." }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -196,9 +198,9 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Pergunte qualquer coisa sobre os sistemas (ex: vá no Opus One e me traga o estoque de produtos)"
+              placeholder={placeholder}
               className="min-h-[80px] resize-none border-0 bg-transparent text-white text-base placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 leading-relaxed"
-              disabled={isLoading}
+              disabled={isLoading || disabled}
             />
           </div>
           
@@ -223,7 +225,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                 }}
                 className="h-10 w-10 rounded-xl hover:bg-white/10 text-white/60 hover:text-primary transition-all duration-300 hover:scale-110 border border-transparent hover:border-primary/20 relative z-10 pointer-events-auto"
                 title="Anexar imagem"
-                disabled={isLoading}
+                disabled={isLoading || disabled}
               >
                 <Paperclip className="h-5 w-5" />
               </Button>
@@ -242,7 +244,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                     : 'hover:bg-white/10 text-white/60 hover:text-green-400 border-transparent hover:border-green-400/20'
                 }`}
                 title={isRecording ? "Parar gravação" : "Gravar áudio"}
-                disabled={isLoading || !!audioBlob}
+                disabled={isLoading || disabled || !!audioBlob}
               >
                 {isRecording ? (
                   <StopCircle className="h-5 w-5" />
@@ -260,7 +262,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               type="submit"
               size="icon"
               className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shrink-0 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-primary/50 disabled:opacity-50 disabled:hover:scale-100"
-              disabled={!message.trim() || isLoading}
+              disabled={!message.trim() || isLoading || disabled}
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

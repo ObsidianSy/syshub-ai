@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, MessageSquare } from "lucide-react";
 import { systemsService } from "@/services/systems.service";
 import { conversationsService } from "@/services/conversations.service";
-import { agentService } from "@/services/agent.service";
 import { System, SystemCategory } from "@/types";
 
 interface Message {
@@ -203,12 +202,26 @@ const Index = () => {
       setMessages(prev => [...prev, userMessage]);
 
       // 2. Chamar agente via backend (proxy para N8N)
-      const responseData = await agentService.process({ question: message });
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const agentResponse = await fetch(`${backendUrl}/api/agent/process`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ question: message }),
+      });
+
+      if (!agentResponse.ok) {
+        throw new Error(`Erro ao processar requisição: ${agentResponse.status}`);
+      }
+
+      const responseData = await agentResponse.json();
       setIsConnected(true);
 
       // Normalizar resposta
-      const answer = responseData.answer || "Sem resposta";
-      const systemUsed = responseData.system_used || "Agente IA";
+      const answer = responseData.answer || responseData.output || "Sem resposta";
+      const systemUsed = responseData.system_used || responseData.system || "Agente IA";
       const systemId = responseData.system_id;
 
       // 3. Adicionar resposta do agente à conversa
