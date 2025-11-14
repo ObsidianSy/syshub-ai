@@ -3,15 +3,18 @@
 # =====================================================
 
 # ================== STAGE 1: Backend Build ==================
-FROM node:18-alpine AS backend-builder
+FROM node:20-alpine AS backend-builder
 
 WORKDIR /app/backend
+
+# Instalar dependências de build para better-sqlite3
+RUN apk add --no-cache python3 make g++ gcc
 
 # Copiar package files do backend
 COPY backend/package*.json ./
 
-# Instalar dependências
-RUN npm ci --only=production
+# Instalar dependências (incluindo devDependencies para build)
+RUN npm ci
 
 # Copiar código do backend
 COPY backend/ ./
@@ -20,7 +23,7 @@ COPY backend/ ./
 RUN npm run build
 
 # ================== STAGE 2: Frontend Build ==================
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
@@ -37,11 +40,11 @@ COPY . ./
 RUN npm run build
 
 # ================== STAGE 3: Production Runtime ==================
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Instalar apenas dependências de produção
+# Instalar dependências runtime para better-sqlite3
 RUN apk add --no-cache tini curl
 
 # Copiar backend compilado
@@ -49,12 +52,19 @@ COPY --from=backend-builder /app/backend/dist ./backend/dist
 COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 COPY --from=backend-builder /app/backend/package.json ./backend/
 
+# Copiar schema do banco SQLite
+COPY --from=backend-builder /app/backend/database ./backend/database
+
 # Copiar frontend buildado
 COPY --from=frontend-builder /app/dist ./frontend/dist
+
+# Criar diretório para o banco de dados SQLite
+RUN mkdir -p /app/backend/data
 
 # Variáveis de ambiente padrão
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV DATABASE_TYPE=sqlite
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
@@ -66,5 +76,5 @@ EXPOSE 3001
 # Usar tini para gerenciar processos
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Comando para rodar o backend
-CMD ["node", "backend/dist/server.js"]
+# Comando para rodar o backend com SQLite
+CMD ["node", "backend/dist/server-sqlite.js"]
