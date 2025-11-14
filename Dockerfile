@@ -66,7 +66,7 @@ ENV NODE_ENV=production
 ENV PORT=80
 ENV DATABASE_TYPE=sqlite
 
-# Healthcheck
+# Healthcheck - verificar se o servidor está respondendo
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:80/health || exit 1
 

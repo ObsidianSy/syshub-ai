@@ -1,4 +1,10 @@
-# Logs
+# Build do frontend
+npm run build
+
+# Backend serve tudo
+cd backend
+npm run dev
+# Acesse: http://localhost:3001# Logs
 logs
 *.log
 npm-debug.log*
