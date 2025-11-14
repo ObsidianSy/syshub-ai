@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import crypto from 'crypto';
 import db from '../config/sqlite.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware.js';
 
@@ -18,14 +19,34 @@ router.post('/', async (req: AuthRequest, res) => {
     const { title } = conversationSchema.parse(req.body);
     const userId = req.user?.id;
 
-    const result = db.prepare(`
-      INSERT INTO conversations (user_id, title)
-      VALUES (?, ?)
-    `).run(userId, title || 'Nova conversa');
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    console.log('💬 Creating conversation:', { userId, title });
+
+    // Verificar se o usuário existe
+    const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!userExists) {
+      console.error('❌ User not found in database:', userId);
+      return res.status(401).json({ error: 'Usuário não encontrado. Faça login novamente.' });
+    }
+
+    // Gerar ID manualmente para poder retornar
+    const conversationId = crypto.randomUUID().replace(/-/g, '');
+
+    db.prepare(`
+      INSERT INTO conversations (id, user_id, title)
+      VALUES (?, ?, ?)
+    `).run(conversationId, userId, title || 'Nova conversa');
+
+    console.log('💬 Conversation ID:', conversationId);
 
     const conversation = db.prepare(`
       SELECT * FROM conversations WHERE id = ?
-    `).get(result.lastInsertRowid);
+    `).get(conversationId);
+
+    console.log('💬 Conversation created:', conversation);
 
     res.status(201).json(conversation);
   } catch (error: any) {
