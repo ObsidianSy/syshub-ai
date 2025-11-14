@@ -1,5 +1,7 @@
 // API Configuration
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Em produção, usa path relativo. Em dev, usa localhost:3001
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api');
 
 // Token management
 export const getToken = (): string | null => {
