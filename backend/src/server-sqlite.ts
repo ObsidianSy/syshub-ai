@@ -58,9 +58,25 @@ if (process.env.NODE_ENV === 'production') {
   console.log(`📂 Serving frontend from: ${frontendPath}`);
   
   app.use(express.static(frontendPath));
+
+  // Diagnóstico: listar arquivos principais
+  app.get('/__diag', (req, res) => {
+    try {
+      const fs = require('fs');
+      const files = fs.readdirSync(frontendPath);
+      res.json({
+        frontendPath,
+        files,
+        hasIndex: files.includes('index.html'),
+        env: { PORT: process.env.PORT, NODE_ENV: process.env.NODE_ENV }
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
   
-  // SPA fallback - todas as rotas não-API retornam o index.html
-  app.get('*', (req, res) => {
+  // SPA fallback apenas para rotas que não começam com /api ou /__diag
+  app.get(/^(?!\/api|\/__diag).*/, (req, res) => {
     const indexPath = path.join(frontendPath, 'index.html');
     console.log(`📄 Serving index.html from: ${indexPath}`);
     res.sendFile(indexPath);
