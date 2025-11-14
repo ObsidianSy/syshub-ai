@@ -63,15 +63,15 @@ RUN mkdir -p /app/backend/data
 
 # Variáveis de ambiente padrão
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=80
 ENV DATABASE_TYPE=sqlite
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+  CMD curl -f http://localhost:80/health || exit 1
 
-# Expor porta do backend
-EXPOSE 3001
+# Expor porta 80 (padrão web)
+EXPOSE 80
 
 # Usar tini para gerenciar processos
 ENTRYPOINT ["/sbin/tini", "--"]

@@ -4,6 +4,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import db from './config/sqlite.js';
 import authRoutes from './routes/auth-sqlite.routes.js';
 import usersRoutes from './routes/users-sqlite.routes.js';
@@ -12,13 +14,19 @@ import systemsRoutes from './routes/systems-sqlite.routes.js';
 import queriesRoutes from './routes/queries-sqlite.routes.js';
 import agentRoutes from './routes/agent-sqlite.routes.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:8080', 'http://localhost:8081'],
+  origin: true, // Permitir todas as origens em produção
   credentials: true,
 }));
 app.use(compression());
@@ -42,6 +50,17 @@ app.use('/api/conversations', conversationsRoutes);
 app.use('/api/systems', systemsRoutes);
 app.use('/api/queries', queriesRoutes);
 app.use('/api/agent', agentRoutes);
+
+// Servir arquivos estáticos do frontend (em produção)
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(frontendPath));
+  
+  // SPA fallback - todas as rotas não-API retornam o index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
