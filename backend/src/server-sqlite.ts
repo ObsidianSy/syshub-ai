@@ -52,33 +52,39 @@ app.use('/api/systems', systemsRoutes);
 app.use('/api/queries', queriesRoutes);
 app.use('/api/agent', agentRoutes);
 
+// Diagnóstico SEMPRE disponível (antes do static)
+app.get('/__diag', (req, res) => {
+  const frontendPath = path.join(__dirname, '../../frontend/dist');
+  try {
+    const fs = require('fs');
+    const files = fs.readdirSync(frontendPath);
+    res.json({
+      frontendPath,
+      files,
+      hasIndex: files.includes('index.html'),
+      env: { 
+        PORT: process.env.PORT, 
+        NODE_ENV: process.env.NODE_ENV,
+        PWD: process.cwd()
+      }
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message, stack: e.stack });
+  }
+});
+
 // Servir arquivos estáticos do frontend (em produção)
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
   console.log(`📂 Serving frontend from: ${frontendPath}`);
   
-  app.use(express.static(frontendPath));
-
-  // Diagnóstico: listar arquivos principais
-  app.get('/__diag', (req, res) => {
-    try {
-      const fs = require('fs');
-      const files = fs.readdirSync(frontendPath);
-      res.json({
-        frontendPath,
-        files,
-        hasIndex: files.includes('index.html'),
-        env: { PORT: process.env.PORT, NODE_ENV: process.env.NODE_ENV }
-      });
-    } catch (e: any) {
-      res.status(500).json({ error: e.message });
-    }
-  });
+  // Static files DEPOIS das rotas específicas
+  app.use(express.static(frontendPath, { index: false }));
   
-  // SPA fallback apenas para rotas que não começam com /api ou /__diag
-  app.get(/^(?!\/api|\/__diag).*/, (req, res) => {
+  // SPA fallback - catch-all para tudo que não for /api ou /__diag
+  app.get('*', (req, res) => {
     const indexPath = path.join(frontendPath, 'index.html');
-    console.log(`📄 Serving index.html from: ${indexPath}`);
+    console.log(`📄 Serving index.html for ${req.path} from: ${indexPath}`);
     res.sendFile(indexPath);
   });
 } else {
