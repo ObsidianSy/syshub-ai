@@ -1,17 +1,9 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
+import { EnhancedResponseCard, AgentResponse } from "./EnhancedResponseCard";
 
-export interface AgentResponse {
-  id: string;
-  title: string;
-  content: string;
-  timestamp: Date;
-  systemName: string;
-}
+export type { AgentResponse } from "./EnhancedResponseCard";
 
 interface ResponseCarouselProps {
   responses: AgentResponse[];
@@ -19,122 +11,115 @@ interface ResponseCarouselProps {
 }
 
 export const ResponseCarousel = ({ responses, onResponseClick }: ResponseCarouselProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [justArrived, setJustArrived] = useState(false);
 
-  const scroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      const scrollAmount = 400;
-      const newScrollLeft = scrollRef.current.scrollLeft + 
-        (direction === "right" ? scrollAmount : -scrollAmount);
+  // Detectar quando um novo card chega
+  useEffect(() => {
+    if (responses.length > 0) {
+      setJustArrived(true);
+      setCurrentIndex(responses.length - 1); // Sempre mostrar o mais recente
       
-      scrollRef.current.scrollTo({
-        left: newScrollLeft,
-        behavior: "smooth",
-      });
+      const timer = setTimeout(() => {
+        setJustArrived(false);
+      }, 2000); // Aumentado de 1200ms para 2000ms
       
-      setTimeout(() => {
-        if (scrollRef.current) {
-          setCanScrollLeft(scrollRef.current.scrollLeft > 0);
-          setCanScrollRight(
-            scrollRef.current.scrollLeft < 
-            scrollRef.current.scrollWidth - scrollRef.current.clientWidth - 10
-          );
-        }
-      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [responses.length]);
+
+  const goToNext = () => {
+    if (currentIndex < responses.length - 1 && !isAnimating) {
+      setIsAnimating(true);
+      setCurrentIndex(prev => prev + 1);
+      setTimeout(() => setIsAnimating(false), 600);
+    }
+  };
+
+  const goToPrev = () => {
+    if (currentIndex > 0 && !isAnimating) {
+      setIsAnimating(true);
+      setCurrentIndex(prev => prev - 1);
+      setTimeout(() => setIsAnimating(false), 600);
     }
   };
 
   if (responses.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <Sparkles className="h-16 w-16 mx-auto mb-6 text-white/60 animate-glow-pulse" />
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Central de Sistemas
-          </h2>
-          <p className="text-white/70 text-lg">
-            Faça uma pergunta sobre qualquer sistema e o agente vai buscar as informações para você
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
+  const currentResponse = responses[currentIndex];
+  const hasMultiple = responses.length > 1;
+
   return (
-    <div className="relative h-full">
-      {canScrollLeft && (
+    <div className="relative w-full flex items-center justify-center py-8">
+      {/* Botão Anterior */}
+      {hasMultiple && currentIndex > 0 && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-full glass-effect hover:bg-white/20 text-white h-12 w-12"
-          onClick={() => scroll("left")}
+          className="absolute left-8 top-1/2 -translate-y-1/2 z-20 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl hover:from-white/20 hover:to-white/10 text-white h-14 w-14 border border-white/20 hover:border-primary/50 transition-all duration-300 hover:scale-110 shadow-2xl"
+          onClick={goToPrev}
+          disabled={isAnimating}
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-7 w-7" />
         </Button>
       )}
 
-      {canScrollRight && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-full glass-effect hover:bg-white/20 text-white h-12 w-12"
-          onClick={() => scroll("right")}
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
-      )}
+      {/* Card Central com Efeito 3D */}
+      <div 
+        className={`
+          perspective-2000 transition-all duration-700
+          ${justArrived ? 'animate-card-arrive-3d' : isAnimating ? 'animate-card-flip' : ''}
+        `}
+        style={{
+          perspective: '2000px',
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        <EnhancedResponseCard
+          response={currentResponse}
+          onClose={() => onResponseClick(currentResponse)}
+          isActive={!isAnimating}
+        />
+      </div>
 
-      <ScrollArea className="h-full">
-        <div
-          ref={scrollRef}
-          className="flex gap-6 px-12 py-12 overflow-x-auto scrollbar-hide items-center"
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          {responses.map((response, idx) => (
-            <Card
-              key={response.id}
-              className="min-w-[400px] max-w-[400px] cursor-pointer transition-all hover:scale-105 hover:-translate-y-2 animate-card-3d glass-effect border-white/20 shadow-2xl"
-              style={{
-                animationDelay: `${idx * 0.1}s`,
-                transform: "perspective(1000px)",
+      {/* Indicator */}
+      {hasMultiple && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+          {responses.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                if (!isAnimating && idx !== currentIndex) {
+                  setIsAnimating(true);
+                  setCurrentIndex(idx);
+                  setTimeout(() => setIsAnimating(false), 600);
+                }
               }}
-              onClick={() => onResponseClick(response)}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <Badge className="bg-primary/20 text-primary border-primary/30">
-                    {response.systemName}
-                  </Badge>
-                  <span className="text-xs text-white/60">
-                    {response.timestamp.toLocaleTimeString('pt-BR', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </span>
-                </div>
-                
-                <h3 className="font-semibold mb-3 text-xl line-clamp-2 text-white">
-                  {response.title}
-                </h3>
-                
-                <p className="text-sm text-white/80 line-clamp-4 leading-relaxed">
-                  {response.content}
-                </p>
-                
-                <div className="mt-4 text-xs text-primary font-medium flex items-center gap-2">
-                  Clique para ver mais
-                  <Sparkles className="h-3 w-3" />
-                </div>
-              </CardContent>
-            </Card>
+              className={`h-2 rounded-full transition-all duration-300 ${
+                idx === currentIndex 
+                  ? 'w-8 bg-primary' 
+                  : 'w-2 bg-white/30 hover:bg-white/50'
+              }`}
+            />
           ))}
         </div>
-      </ScrollArea>
+      )}
+
+      {/* Botão Próximo */}
+      {hasMultiple && currentIndex < responses.length - 1 && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-8 top-1/2 -translate-y-1/2 z-20 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl hover:from-white/20 hover:to-white/10 text-white h-14 w-14 border border-white/20 hover:border-primary/50 transition-all duration-300 hover:scale-110 shadow-2xl"
+          onClick={goToNext}
+          disabled={isAnimating}
+        >
+          <ChevronRight className="h-7 w-7" />
+        </Button>
+      )}
     </div>
   );
 };

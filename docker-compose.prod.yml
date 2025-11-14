@@ -1,0 +1,85 @@
+# =====================================================
+# SYSHUB AI - DOCKER COMPOSE PARA PRODUÇÃO (VPS)
+# =====================================================
+
+version: '3.8'
+
+services:
+  # ================== PostgreSQL Database ==================
+  postgres:
+    image: postgres:15-alpine
+    container_name: syshub_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-syshub}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database-schema.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-syshub}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - syshub_network
+
+  # ================== Application (Backend + Frontend) ==================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: syshub_app
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-syshub}
+      JWT_SECRET: ${JWT_SECRET}
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001/api}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - syshub_network
+
+  # ================== Nginx Reverse Proxy ==================
+  nginx:
+    image: nginx:alpine
+    container_name: syshub_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - syshub_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  syshub_network:
+    driver: bridge

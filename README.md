@@ -1,53 +1,213 @@
-# Welcome to your Lovable project
+# 🚀 SysHub AI - Central de Sistemas Inteligente
 
-## Project info
+> Sistema de chat com IA para consultar múltiplos sistemas através de linguagem natural
 
-**URL**: https://lovable.dev/projects/4720e6f8-fbcd-4e30-9ad7-504c2b85a6ea
+## 📋 Sobre o Projeto
 
-## How can I edit this code?
+**SysHub AI** é uma plataforma que centraliza o acesso a diferentes sistemas empresariais através de um agente de IA. Os usuários fazem perguntas em linguagem natural e o agente identifica qual sistema consultar e retorna as informações necessárias.
 
-There are several ways of editing your application.
+### ✨ Características
 
-**Use Lovable**
+- 🤖 **Agente IA** - Processa perguntas em linguagem natural
+- 🖥️ **Multi-sistemas** - Conecta em múltiplos sistemas simultaneamente
+- 💬 **Conversas** - Mantém contexto de conversas anteriores
+- ⭐ **Favoritos** - Salve queries importantes
+- 📊 **Estatísticas** - Dashboard com métricas de uso
+- 🔐 **Autenticação** - Sistema completo de login/registro
+- 📱 **Responsivo** - Interface adaptável para mobile
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4720e6f8-fbcd-4e30-9ad7-504c2b85a6ea) and start prompting.
+## 🛠️ Tecnologias
 
-Changes made via Lovable will be committed automatically to this repo.
+### Frontend
+- React 18 + TypeScript
+- Vite
+- TailwindCSS + Shadcn/ui
+- React Query
+- React Router
 
-**Use your preferred IDE**
+### Backend
+- Node.js + TypeScript
+- Express.js
+- PostgreSQL
+- JWT Authentication
+- Zod (validação)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## ⚡ Quick Start
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 1. Criar Banco de Dados
+```powershell
+docker exec -i docker_iagente psql -U postgres -d docker < CREATE_TABLES.sql
+```
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 2. Backend
+```powershell
+cd backend
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### 3. Frontend
+```powershell
+npm install
+npm run dev
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📚 Documentação
 
-**Use GitHub Codespaces**
+- **[QUICKSTART.md](QUICKSTART.md)** - Início rápido (3 passos)
+- **[SETUP.md](SETUP.md)** - Guia completo de instalação
+- **[BACKEND_COMPLETO.md](BACKEND_COMPLETO.md)** - Documentação do backend
+- **[backend/README.md](backend/README.md)** - API endpoints
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
+## 🗄️ Estrutura do Banco
+
+O sistema possui **12 tabelas PostgreSQL**:
+
+- `users` - Usuários autenticados
+- `systems` - Sistemas disponíveis
+- `queries` - Perguntas e respostas
+- `conversations` - Conversas contínuas
+- `conversation_messages` - Mensagens
+- `query_history` - Auditoria
+- `system_logs` - Logs de acesso
+- `system_documentation` - Docs técnicas
+- `favorites` - Favoritos dos usuários
+- `notifications` - Notificações
+- `agent_config` - Config do agente IA
+- `api_keys` - Chaves de integração
+
+## 🔧 Configuração
+
+### Backend (.env em `backend/`)
+```env
+DB_HOST=docker_iagente
+DB_PORT=5432
+DB_NAME=docker
+DB_USER=postgres
+DB_PASSWORD=sua_senha
+
+PORT=3001
+JWT_SECRET=sua_chave_secreta
+CORS_ORIGIN=http://localhost:5173
+```
+
+### Frontend (.env na raiz)
+```env
+VITE_API_URL=http://localhost:3001/api
+VITE_N8N_WEBHOOK_URL=
+```
+
+## 🌐 API Endpoints
+
+### Autenticação
+- `POST /api/auth/register` - Criar conta
+- `POST /api/auth/login` - Login
+- `POST /api/auth/verify` - Verificar token
+
+### Sistemas
+- `GET /api/systems` - Listar sistemas
+- `GET /api/systems/:id` - Buscar por ID
+- `POST /api/systems` - Criar (admin)
+
+### Queries
+- `POST /api/queries` - Criar query
+- `GET /api/queries` - Listar queries
+- `POST /api/queries/:id/favorite` - Favoritar
+
+### Conversas
+- `POST /api/conversations` - Nova conversa
+- `POST /api/conversations/:id/messages` - Enviar mensagem
+
+[Ver documentação completa da API](backend/README.md)
+
+## 🤖 Integração com N8N
+
+O sistema pode se integrar com N8N para processamento de IA:
+
+1. Configure um workflow no N8N
+2. Adicione a URL do webhook no `.env`
+3. O agente enviará as queries para processamento
+
+## 📊 Funcionalidades
+
+- ✅ Login/Registro com JWT
+- ✅ CRUD de sistemas
+- ✅ Criar e gerenciar queries
+- ✅ Conversas com histórico
+- ✅ Sistema de favoritos
+- ✅ Estatísticas de uso
+- ✅ Auditoria de ações
+- ✅ Notificações
+- ✅ Documentação de sistemas
+- ✅ API Keys para integrações
+
+## 🧪 Testar API
+
+```bash
+# Criar usuário
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"123456","fullName":"Test"}'
+
+# Login
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"123456"}'
+
+# Listar sistemas (com token)
+curl http://localhost:3001/api/systems \
+  -H "Authorization: Bearer SEU_TOKEN"
+```
+
+## 📁 Estrutura do Projeto
+
+```
+syshub-ai/
+├── backend/              # API Node.js
+│   ├── src/
+│   │   ├── config/      # Configurações
+│   │   ├── middleware/  # Auth, etc
+│   │   ├── routes/      # Rotas API
+│   │   └── server.ts    # Servidor
+│   └── database/
+│       └── schema.sql   # Schema SQL
+├── src/                  # Frontend React
+│   ├── components/      # Componentes UI
+│   ├── services/        # API services
+│   ├── types/           # TypeScript types
+│   └── pages/           # Páginas
+├── CREATE_TABLES.sql     # SQL completo
+└── *.md                  # Documentação
+```
+
+## 🔒 Segurança
+
+- Autenticação JWT
+- Senhas com bcrypt
+- Helmet (security headers)
+- CORS configurável
+- Validação de inputs
+- Role-based access control
+
+## 🐛 Troubleshooting
+
+Ver [SETUP.md](SETUP.md) seção "Troubleshooting"
+
+## 📝 Licença
+
+Este projeto é privado.
+
+## 🤝 Contribuindo
+
+1. Clone o repositório
+2. Crie uma branch (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'Add nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+---
+
+**Desenvolvido com ❤️ para ObsidianSy**
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
 ## What technologies are used for this project?
