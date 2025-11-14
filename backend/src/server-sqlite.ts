@@ -54,11 +54,19 @@ app.use('/api/agent', agentRoutes);
 // Servir arquivos estáticos do frontend (em produção)
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
+  console.log(`📂 Serving frontend from: ${frontendPath}`);
+  
   app.use(express.static(frontendPath));
   
   // SPA fallback - todas as rotas não-API retornam o index.html
   app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    const indexPath = path.join(frontendPath, 'index.html');
+    console.log(`📄 Serving index.html from: ${indexPath}`);
+    res.sendFile(indexPath);
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.json({ message: 'API is running. Frontend should be served separately in development.' });
   });
 }
 
