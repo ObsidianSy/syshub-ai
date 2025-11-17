@@ -13,6 +13,8 @@ import conversationsRoutes from './routes/conversations-sqlite.routes.js';
 import systemsRoutes from './routes/systems-sqlite.routes.js';
 import queriesRoutes from './routes/queries-sqlite.routes.js';
 import agentRoutes from './routes/agent-sqlite.routes.js';
+import agentManagementRoutes from './routes/agent-management.routes.js';
+import conversationDocumentsRoutes from './routes/conversation-documents.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,9 +50,11 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/conversations', conversationsRoutes);
+app.use('/api/conversations', conversationDocumentsRoutes); // Documents routes
 app.use('/api/systems', systemsRoutes);
 app.use('/api/queries', queriesRoutes);
 app.use('/api/agent', agentRoutes);
+app.use('/api/agent', agentManagementRoutes); // New: Agent management APIs
 
 // Diagnóstico SEMPRE disponível (antes do static)
 app.get('/__diag', (req, res) => {

@@ -2,7 +2,6 @@ import { Moon, Sun, Wifi, WifiOff, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import nexusHubLogo from "@/assets/nexushub-logo.png";
 import { StatusPanel } from "@/components/StatusPanel";
 
 interface HeaderProps {
@@ -26,11 +25,11 @@ export const Header = ({ isDark, onThemeToggle, isConnected, onLogout, totalSyst
         <div className="flex items-center gap-4 group cursor-pointer">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full animate-pulse" />
-            <img src={nexusHubLogo} alt="NexusHub" className="h-12 w-12 relative z-10 transition-transform group-hover:scale-110 duration-300" />
+            <img src="/logo.png" alt="SysHub AI" className="h-12 w-12 relative z-10 transition-transform group-hover:scale-110 duration-300" />
           </div>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-primary to-white bg-clip-text text-transparent">
-              NexusHub
+              SysHub AI
             </h1>
             <p className="text-xs text-white/70 tracking-wider uppercase font-medium">
               Central Inteligente de Sistemas

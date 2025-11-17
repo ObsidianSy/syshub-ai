@@ -1,15 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { ChatInput } from "@/components/ChatInput";
 import { ConversationHistory, Conversation } from "@/components/ConversationHistory";
-import { SystemsSidebar } from "@/components/SystemsSidebar";
+import { DocumentationPanel } from "@/components/DocumentationPanel";
 import { QuickSuggestions } from "@/components/QuickSuggestions";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, MessageSquare } from "lucide-react";
 import { systemsService } from "@/services/systems.service";
 import { conversationsService } from "@/services/conversations.service";
 import { agentService } from "@/services/agent.service";
+import * as conversationDocumentsService from "@/services/conversation-documents.service";
 import { System, SystemCategory } from "@/types";
 
 interface Message {
@@ -32,10 +33,19 @@ const Index = () => {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   
+  // Estado para documentos
+  const [documents, setDocuments] = useState<conversationDocumentsService.ConversationDocument[]>([]);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const onlineSystems = systems.filter(s => s.status === "online").length;
   const lastUpdate = new Date();
+
+  // Auto-scroll para última mensagem
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Carregar sistemas e conversas ao montar
   useEffect(() => {
@@ -81,7 +91,9 @@ const Index = () => {
 
   const loadConversations = async () => {
     try {
+      console.log('📥 Carregando conversas do backend...');
       const { conversations: data } = await conversationsService.getAll();
+      console.log('📥 Conversas recebidas:', data.length);
       
       // Converter para formato da UI
       const convs: Conversation[] = data.map(c => {
@@ -178,17 +190,32 @@ const Index = () => {
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!currentConversationId) {
-      // Criar nova conversa se não houver uma ativa
-      await handleNewConversation();
-      return;
-    }
-
     setIsLoading(true);
     
     try {
+      // Criar nova conversa se não houver uma ativa
+      let conversationId = currentConversationId;
+      
+      if (!conversationId) {
+        const title = `Conversa ${new Date().toLocaleString("pt-BR")}`;
+        const newConv = await conversationsService.create(title);
+        
+        const conversation: Conversation = {
+          id: newConv.id,
+          title: newConv.title,
+          lastMessage: message.substring(0, 100),
+          timestamp: new Date(newConv.created_at),
+          messageCount: 0,
+          isFavorite: false,
+        };
+        
+        setConversations(prev => [conversation, ...prev]);
+        setCurrentConversationId(newConv.id);
+        conversationId = newConv.id;
+      }
+
       // 1. Adicionar mensagem do usuário à conversa
-      await conversationsService.addMessage(currentConversationId, {
+      await conversationsService.addMessage(conversationId, {
         role: "user",
         content: message,
       });
@@ -212,7 +239,7 @@ const Index = () => {
       const systemId = responseData.system_id;
 
       // 3. Adicionar resposta do agente à conversa
-      await conversationsService.addMessage(currentConversationId, {
+      await conversationsService.addMessage(conversationId, {
         role: "assistant",
         content: answer,
         systemId: systemId,
@@ -230,7 +257,7 @@ const Index = () => {
 
       // Atualizar lista de conversas (última mensagem + contador)
       setConversations(prev => prev.map(c => 
-        c.id === currentConversationId
+        c.id === conversationId
           ? {
               ...c,
               lastMessage: answer.substring(0, 100),
@@ -258,8 +285,86 @@ const Index = () => {
     }
   };
 
-  const handleConversationClick = (conversationId: string) => {
+  const handleConversationClick = async (conversationId: string) => {
     loadConversation(conversationId);
+    // Carregar documentos da conversa
+    await loadDocuments(conversationId);
+  };
+
+  // Carregar documentos de uma conversa
+  const loadDocuments = async (conversationId: string) => {
+    try {
+      const docs = await conversationDocumentsService.getConversationDocuments(conversationId);
+      setDocuments(docs);
+    } catch (error) {
+      console.error("Erro ao carregar documentos:", error);
+      setDocuments([]);
+    }
+  };
+
+  // Handler para upload de documento
+  const handleUploadDocument = async (file: File) => {
+    if (!currentConversationId) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma conversa primeiro",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const newDoc = await conversationDocumentsService.uploadConversationDocument(
+        currentConversationId,
+        file
+      );
+      setDocuments((prev) => [newDoc, ...prev]);
+      toast({
+        title: "Sucesso",
+        description: "Arquivo enviado com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao fazer upload:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar o arquivo",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler para deletar documento
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!currentConversationId) return;
+
+    try {
+      await conversationDocumentsService.deleteConversationDocument(
+        currentConversationId,
+        documentId
+      );
+      setDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
+      toast({
+        title: "Sucesso",
+        description: "Arquivo deletado com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao deletar documento:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar o arquivo",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler para download de documento
+  const handleDownloadDocument = (document: conversationDocumentsService.ConversationDocument) => {
+    if (!currentConversationId) return;
+    conversationDocumentsService.downloadConversationDocument(
+      currentConversationId,
+      document.id,
+      document.name
+    );
   };
 
   const handleToggleFavorite = (id: string) => {
@@ -275,8 +380,18 @@ const Index = () => {
 
   const handleDeleteConversation = async (id: string) => {
     try {
-      // TODO: Implementar conversationsService.delete(id) no backend
-      setConversations(prev => prev.filter(c => c.id !== id));
+      console.log('🗑️ Deletando conversa:', id);
+      
+      // Deletar no backend
+      const result = await conversationsService.delete(id);
+      console.log('✅ Conversa deletada no backend:', result);
+      
+      // Remover da lista local
+      setConversations(prev => {
+        const updated = prev.filter(c => c.id !== id);
+        console.log('📝 Conversas após delete:', updated.length);
+        return updated;
+      });
       
       if (currentConversationId === id) {
         setCurrentConversationId(null);
@@ -288,7 +403,7 @@ const Index = () => {
         description: "A conversa foi removida com sucesso.",
       });
     } catch (error) {
-      console.error("Erro ao deletar conversa:", error);
+      console.error("❌ Erro ao deletar conversa:", error);
       toast({
         title: "Erro",
         description: "Não foi possível excluir a conversa.",
@@ -321,58 +436,43 @@ const Index = () => {
         onToggleFavorite={handleToggleFavorite}
         onDelete={handleDeleteConversation}
       />
-
-      {/* Sidebar de sistemas (direita) */}
-      <SystemsSidebar
-        systems={systems.map(s => ({
-          id: s.id,
-          name: s.name,
-          status: s.status as 'online' | 'offline' | 'maintenance',
-          responseTime: 150,
-          lastQuery: new Date(),
-          queriesCount: 0, // TODO: contar por sistema
-          uptime: s.status === 'online' ? 99.9 : 0,
-          category: s.category || 'Sistema'
-        }))}
-        onSystemSelect={(systemId) => {
-          const system = systems.find(s => s.id === systemId);
-          if (system) {
-            toast({
-              title: "Sistema selecionado",
-              description: `Pronto para consultar ${system.name}`,
-            });
-          }
-        }}
+      
+      {/* Painel de Documentação (direita) */}
+      <DocumentationPanel
+        conversationId={currentConversationId}
+        documents={documents}
+        onUpload={handleUploadDocument}
+        onDelete={handleDeleteDocument}
+        onDownload={handleDownloadDocument}
       />
       
-      <main className="flex-1 flex flex-col pt-[80px] pl-96 pr-80 relative z-10 transition-all duration-300">
-        <div className="flex-1 flex flex-col items-center px-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 flex flex-col pt-[80px] pl-96 pr-80 relative z-10 transition-all duration-300 h-screen">
+        {/* Área de mensagens com scroll */}
+        <div className="flex-1 overflow-y-auto px-8 max-w-7xl mx-auto w-full pb-4">
           
           {/* Estado vazio - sem conversa ativa */}
-          {!currentConversationId && messages.length === 0 && (
+          {messages.length === 0 && (
             <>
               <div className="text-center mb-12 mt-20">
-                <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-float">
-                  <svg className="h-12 w-12 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
-                  </svg>
+                <div className="inline-flex items-center justify-center mb-6">
+                  <img 
+                    src="/logo.png" 
+                    alt="SysHub AI" 
+                    className="h-32 w-32 object-contain animate-float"
+                  />
                 </div>
                 <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-white via-primary to-white bg-clip-text text-transparent animate-fade-in-up">
                   Central de Sistemas
                 </h1>
                 <p className="text-xl text-white/70 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                  Clique em "Novo Chat" para começar uma conversa
+                  Digite sua mensagem para começar uma conversa
                 </p>
               </div>
 
               <div className="mb-12 w-full animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <QuickSuggestions 
                   onSuggestionClick={(text) => {
-                    handleNewConversation().then(() => {
-                      handleSendMessage(text);
-                    });
+                    handleSendMessage(text);
                   }}
                 />
               </div>
@@ -428,28 +528,24 @@ const Index = () => {
                   {msg.role === "user" && (
                     <div className="flex-shrink-0">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">U</span>
+                        <span className="text-white font-semibold text-sm">W</span>
                       </div>
                     </div>
                   )}
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
           )}
-          
-          <div className="flex-1" />
-          
-          {/* Input de chat fixo */}
-          <div className="w-full max-w-5xl pb-6 pt-6">
+        </div>
+        
+        {/* Input de chat fixo na parte inferior */}
+        <div className="border-t border-white/10 bg-black/40 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto px-8">
             <ChatInput
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
-              disabled={!currentConversationId}
-              placeholder={
-                currentConversationId 
-                  ? "Digite sua mensagem..." 
-                  : "Clique em 'Novo Chat' para começar"
-              }
+              placeholder="Digite sua mensagem..."
             />
           </div>
         </div>

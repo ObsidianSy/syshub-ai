@@ -73,6 +73,24 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS conversation_documents (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    conversation_id TEXT NOT NULL,
+    user_id TEXT,
+    filename TEXT NOT NULL,
+    original_filename TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    file_size INTEGER NOT NULL,
+    storage_path TEXT,
+    file_data TEXT,
+    metadata TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  );
 `);
 
 // Inserir sistemas padrão
