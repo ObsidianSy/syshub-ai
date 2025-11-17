@@ -27,14 +27,18 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
-# Copiar package files do frontend
-COPY package*.json ./
+# Copiar package files do frontend (incluindo lockfile)
+COPY package.json package-lock.json ./
 
 # Instalar dependências
 RUN npm ci
 
-# Copiar código do frontend
-COPY . ./
+# Copiar código do frontend (excluindo backend, node_modules, dist)
+COPY src/ ./src/
+COPY public/ ./public/
+COPY index.html ./
+COPY vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json ./
+COPY tailwind.config.ts postcss.config.js components.json ./
 
 # Build do frontend (Vite)
 RUN npm run build
