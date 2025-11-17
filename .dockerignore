@@ -40,9 +40,8 @@ Thumbs.db
 .gitignore
 
 # Docker
-Dockerfile
+# (manter Dockerfile no contexto de build)
 docker-compose*.yml
-.dockerignore
 
 # Documentation
 *.md
