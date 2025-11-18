@@ -23,13 +23,27 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+// Define e reforça o search_path ao conectar (robusto)
+const SCHEMA = process.env.DB_SCHEMA || 'postgres';
+const isValidSchema = /^[a-zA-Z0-9_]+$/.test(SCHEMA);
+
+pool.on('connect', async (client) => {
+  try {
+    const schemaToUse = isValidSchema ? SCHEMA : 'public';
+    await client.query(`SET search_path TO ${schemaToUse}, public`);
+    console.log('📚 search_path set on connect:', `${schemaToUse}, public`);
+  } catch (e) {
+    console.error('⚠️ Falha ao definir search_path:', e);
+  }
+});
+
 // Log DB connection information (no secrets)
 console.log('🔌 PostgreSQL pool config:', {
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || '5432',
   database: process.env.DB_NAME || 'syshub',
   user: process.env.DB_USER || 'postgres',
-  schema: process.env.DB_SCHEMA || 'public (default)',
+  schema: SCHEMA,
 });
 
 export const query = async (text: string, params?: any[]) => {
