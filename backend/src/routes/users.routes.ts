@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { query } from '../config/database.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware.js';
 
