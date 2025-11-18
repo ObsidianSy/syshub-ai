@@ -8,9 +8,10 @@ const router = express.Router();
  * Headers: x-admin-token: ADMIN_RESET_TOKEN (from env)
  * Body: { email: string, password: string }
  */
-router.post('/admin/reset-password', async (req, res) => {
+router.post('/reset-password', async (req, res) => {
     try {
-        const token = req.headers['x-admin-token'] || req.headers['x-admin-token'.toLowerCase()];
+        // normalize header access - express.get returns value or undefined
+        const token = (req.get('x-admin-token') || req.get('X-Admin-Token'));
         const adminToken = process.env.ADMIN_RESET_TOKEN;
         if (!adminToken) {
             return res.status(500).json({ success: false, error: 'Admin reset token not configured' });
@@ -31,7 +32,8 @@ router.post('/admin/reset-password', async (req, res) => {
     }
     catch (error) {
         console.error('❌ Error in admin reset password:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        const message = (error instanceof Error) ? error.message : String(error);
+        return res.status(500).json({ success: false, error: message });
     }
 });
 export default router;

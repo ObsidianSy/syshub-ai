@@ -17,6 +17,7 @@ import conversationRoutes from './routes/conversations.routes.js';
 import userRoutes from './routes/users.routes.js';
 import initDbRoutes from './routes/init-db.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import debugDbRoutes from './routes/debug-db.routes.js';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -62,6 +63,7 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', initDbRoutes); // Database initialization routes
 app.use('/api/admin', adminRoutes); // Admin utilities (reset password)
+app.use('/api', debugDbRoutes); // DB debug routes (read-only)
 // Serve static files from frontend build (in production)
 if (process.env.NODE_ENV === 'production') {
     const frontendPath = path.join(__dirname, '../../frontend/dist');
