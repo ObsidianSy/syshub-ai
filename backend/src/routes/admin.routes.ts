@@ -12,7 +12,8 @@ const router = express.Router();
  */
 router.post('/reset-password', async (req, res) => {
   try {
-    const token = req.headers['x-admin-token'] || req.headers['x-admin-token'.toLowerCase()];
+    // normalize header access - express.get returns value or undefined
+    const token = (req.get('x-admin-token') || req.get('X-Admin-Token')) as string | undefined;
     const adminToken = process.env.ADMIN_RESET_TOKEN;
 
     if (!adminToken) {
@@ -38,9 +39,10 @@ router.post('/reset-password', async (req, res) => {
     }
 
     return res.json({ success: true, message: 'Password updated successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error in admin reset password:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    const message = (error instanceof Error) ? error.message : String(error);
+    return res.status(500).json({ success: false, error: message });
   }
 });
 
