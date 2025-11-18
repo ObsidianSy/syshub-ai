@@ -126,4 +126,41 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /api/auth/verify
+router.post('/verify', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Token não fornecido' });
+    }
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || 'default-secret'
+    ) as any;
+
+    const user: any = db.prepare(
+      'SELECT id, email, full_name, role, avatar_url, is_active FROM users WHERE id = ?'
+    ).get(String(decoded.id));
+
+    if (!user || user.is_active !== 1) {
+      return res.status(401).json({ error: 'Usuário não encontrado' });
+    }
+
+    res.json({
+      user: {
+        id: String(user.id),
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        avatarUrl: user.avatar_url,
+      },
+    });
+  } catch (error) {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+});
+
 export default router;

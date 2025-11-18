@@ -8,6 +8,7 @@ import { QuickSuggestions } from "@/components/QuickSuggestions";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, MessageSquare } from "lucide-react";
 import { systemsService } from "@/services/systems.service";
+import { authService } from "@/services/auth.service";
 import { conversationsService } from "@/services/conversations.service";
 import { agentService } from "@/services/agent.service";
 import * as conversationDocumentsService from "@/services/conversation-documents.service";
@@ -49,6 +50,19 @@ const Index = () => {
 
   // Carregar sistemas e conversas ao montar
   useEffect(() => {
+    // 0) Verificar validade do token e sincronizar usuário
+    (async () => {
+      try {
+        const { user } = await authService.verifyToken();
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch (err) {
+        console.warn('Token inválido ou usuário inexistente. Limpando sessão.');
+        authService.logout();
+        navigate('/login', { replace: true });
+        return;
+      }
+    })();
+
     loadSystems();
     loadConversations();
     // eslint-disable-next-line react-hooks/exhaustive-deps

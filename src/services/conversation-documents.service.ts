@@ -20,7 +20,7 @@ export interface ConversationDocument {
 export const getConversationDocuments = async (
   conversationId: string
 ): Promise<ConversationDocument[]> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   
   const response = await axios.get(
     `${API_BASE_URL}/api/conversations/${conversationId}/documents`,
@@ -41,7 +41,7 @@ export const uploadConversationDocument = async (
   conversationId: string,
   file: File
 ): Promise<ConversationDocument> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   
   const formData = new FormData();
   formData.append('file', file);
@@ -67,7 +67,7 @@ export const deleteConversationDocument = async (
   conversationId: string,
   documentId: string
 ): Promise<void> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   
   await axios.delete(
     `${API_BASE_URL}/api/conversations/${conversationId}/documents/${documentId}`,
@@ -87,7 +87,7 @@ export const downloadConversationDocument = (
   documentId: string,
   filename: string
 ) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   const url = `${API_BASE_URL}/api/conversations/${conversationId}/documents/${documentId}/download`;
 
   // Criar link temporário para download
