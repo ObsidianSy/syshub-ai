@@ -115,4 +115,16 @@ users.forEach((u: any) => {
   console.log(`   - ${u.email} (ID: ${u.id}, Role: ${u.role})`);
 });
 
+// Criar admin se não existir
+const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('deltagarr@gmail.com');
+if (!adminExists) {
+  const hashedPassword = bcrypt.hashSync('senha123', 10);
+  const stmt = db.prepare(`
+    INSERT INTO users (id, email, password_hash, full_name, role, is_active)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run('739d9e3d-5e7a-411f-947e-74d74e1ab816', 'deltagarr@gmail.com', hashedPassword, 'Wesley Admin', 'admin', 1);
+  console.log('✅ Admin criado: deltagarr@gmail.com');
+}
+
 export default db;

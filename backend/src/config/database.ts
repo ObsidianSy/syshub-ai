@@ -14,8 +14,7 @@ export const pool = new Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-  // Usar schema postgres ao invés do docker
-  options: '-c search_path=postgres,public',
+  // Não force search_path aqui; será definido no evento 'connect'
 });
 
 pool.on('error', (err) => {
@@ -24,7 +23,7 @@ pool.on('error', (err) => {
 });
 
 // Define e reforça o search_path ao conectar (robusto)
-const SCHEMA = process.env.DB_SCHEMA || 'postgres';
+const SCHEMA = process.env.DB_SCHEMA || 'public';
 const isValidSchema = /^[a-zA-Z0-9_]+$/.test(SCHEMA);
 
 pool.on('connect', async (client) => {

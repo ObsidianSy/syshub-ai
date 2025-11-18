@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import db from '../config/sqlite.js';
-export const authenticateToken = (req, res, next) => {
+import { query } from '../config/database.js';
+export const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) {
@@ -16,7 +17,22 @@ export const authenticateToken = (req, res, next) => {
         // Garantir que o ID seja string
         const userId = String(decoded.id);
         // Verificar se o usuário existe no banco de dados
-        const userExists = db.prepare('SELECT id, email, role, is_active FROM users WHERE id = ?').get(userId);
+        let userExists = null;
+        if (process.env.DB_HOST) {
+            // PostgreSQL mode
+            try {
+                const result = await query('SELECT id, email, role, is_active FROM users WHERE id = $1', [userId]);
+                userExists = result.rows[0];
+            }
+            catch (e) {
+                console.error('Erro consultando PostgreSQL na autenticação:', e);
+                userExists = null;
+            }
+        }
+        else {
+            // SQLite fallback
+            userExists = db.prepare('SELECT id, email, role, is_active FROM users WHERE id = ?').get(userId);
+        }
         if (!userExists) {
             console.log('❌ Usuário não encontrado no banco:', userId);
             console.log('❌ Tipo do ID decodificado:', typeof decoded.id);
