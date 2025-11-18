@@ -1,11 +1,14 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth.middleware.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
 // Rota proxy para chamar o webhook N8N (evita problemas de CORS)
-router.post('/process', authenticateToken, async (req: Request, res: Response) => {
+router.post('/process', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('🤖 Agent process chamado por:', req.user?.email);
+    console.log('📦 Payload recebido:', JSON.stringify(req.body, null, 2));
+    
     const webhookUrl = process.env.N8N_WEBHOOK_URL;
 
     if (!webhookUrl) {
@@ -89,9 +92,11 @@ router.post('/process', authenticateToken, async (req: Request, res: Response) =
       }
     }
 
+    console.log('✅ Resposta final enviada ao frontend:', JSON.stringify(responseData, null, 2));
     res.json(responseData);
   } catch (error: any) {
     console.error('❌ Erro ao processar requisição do agente:', error);
+    console.error('❌ Stack trace:', error.stack);
     res.status(500).json({
       error: 'Erro ao processar requisição do agente',
       details: error.message,

@@ -80,11 +80,15 @@ router.post('/login', async (req, res) => {
     `).get(email);
 
     if (!user) {
+      console.log('❌ Usuário não encontrado:', email);
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
+    
+    console.log('✅ Usuário encontrado:', { id: user.id, email: user.email, role: user.role });
 
     const validPassword = bcrypt.compareSync(password, user.password_hash);
     if (!validPassword) {
+      console.log('❌ Senha inválida para usuário:', email);
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
@@ -93,11 +97,34 @@ router.post('/login', async (req, res) => {
     `).run(user.id);
 
     // Gerar token (7 dias = 604800 segundos)
+    // Garantir que o ID seja string
+    const userId = String(user.id);
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: userId, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'default-secret',
       { expiresIn: 604800 }
     );
+    
+    console.log('✅ Token gerado para usuário:', { id: userId, email: user.email });
+
+    res.json({
+      user: {
+        id: userId,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+      },
+      token,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.log('❌ Validation error:', error.errors);
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('❌ Erro no login:', error);
+    res.status(500).json({ error: 'Erro ao fazer login' });
+  }
+});
 
     res.json({
       user: {
