@@ -74,6 +74,13 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
+    console.log('📥 Login attempt:', { 
+      body: req.body,
+      email: req.body.email, 
+      hasPassword: !!req.body.password,
+      passwordLength: req.body.password?.length 
+    });
+    
     const { email, password } = loginSchema.parse(req.body);
 
     // Buscar usuário
@@ -82,16 +89,31 @@ router.post('/login', async (req, res) => {
       [email]
     );
 
+    console.log('🔍 Query result:', { 
+      found: result.rows.length > 0,
+      email,
+      rowCount: result.rows.length 
+    });
+
     if (result.rows.length === 0) {
+      console.log('❌ Usuário não encontrado:', email);
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
     const user = result.rows[0];
+    console.log('✅ Usuário encontrado:', { 
+      id: user.id, 
+      email: user.email, 
+      role: user.role,
+      hasPasswordHash: !!user.password_hash 
+    });
 
     // Verificar senha
     const validPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('🔐 Password check:', { valid: validPassword });
 
     if (!validPassword) {
+      console.log('❌ Senha inválida para:', email);
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
@@ -105,6 +127,8 @@ router.post('/login', async (req, res) => {
       { expiresIn: 604800 }
     );
 
+    console.log('✅ Login successful:', { id: user.id, email: user.email });
+
     res.json({
       user: {
         id: user.id,
@@ -117,9 +141,10 @@ router.post('/login', async (req, res) => {
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
+      console.log('❌ Validation error:', error.errors);
       return res.status(400).json({ error: error.errors[0].message });
     }
-    console.error('Erro no login:', error);
+    console.error('❌ Erro no login:', error);
     res.status(500).json({ error: 'Erro ao fazer login' });
   }
 });
@@ -162,6 +187,24 @@ router.post('/verify', async (req, res) => {
     });
   } catch (error) {
     res.status(401).json({ error: 'Token inválido' });
+  }
+});
+
+// GET /api/auth/debug-users (temporário para debug)
+router.get('/debug-users', async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT id, email, full_name, role, is_active, created_at FROM users LIMIT 10',
+      []
+    );
+    
+    res.json({
+      count: result.rows.length,
+      users: result.rows
+    });
+  } catch (error) {
+    console.error('Erro ao listar usuários:', error);
+    res.status(500).json({ error: 'Erro ao listar usuários' });
   }
 });
 
