@@ -21,7 +21,8 @@ const loginSchema = z.object({
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, fullName } = registerSchema.parse(req.body);
+    let { email, password, fullName } = registerSchema.parse(req.body);
+    email = String(email).trim().toLowerCase();
 
     // Verificar se usuário já existe
     const existingUser = await query(
