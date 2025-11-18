@@ -454,10 +454,18 @@ const Index = () => {
       {/* Painel de Documentação (direita) */}
       <DocumentationPanel
         conversationId={currentConversationId}
-        documents={documents}
+        documents={documents.map(doc => ({
+          ...doc,
+          uploadedAt: new Date(doc.uploadedAt)
+        }))}
         onUpload={handleUploadDocument}
         onDelete={handleDeleteDocument}
-        onDownload={handleDownloadDocument}
+        onDownload={(doc) => {
+          const originalDoc = documents.find(d => d.id === doc.id);
+          if (originalDoc) {
+            handleDownloadDocument(originalDoc);
+          }
+        }}
       />
       
       <main className="flex-1 flex flex-col pt-[80px] pl-96 pr-80 relative z-10 transition-all duration-300 h-screen">

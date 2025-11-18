@@ -11,7 +11,7 @@ export interface ConversationDocument {
   url: string;
   uploadedAt: string;
   conversationId: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 /**

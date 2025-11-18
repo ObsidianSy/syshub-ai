@@ -107,6 +107,19 @@ export interface ConversationMessage {
   createdAt: string;
 }
 
+// Documents
+export interface Document {
+  id: string;
+  name: string;
+  type: string; // 'image' | 'pdf' | 'text' | 'document' | 'other'
+  mimeType: string;
+  size: number;
+  url: string;
+  uploadedAt: Date;
+  conversationId: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface ConversationWithMessages {
   conversation: Conversation;
   messages: ConversationMessage[];
