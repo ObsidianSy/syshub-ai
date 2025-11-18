@@ -166,6 +166,23 @@ router.post('/init-db', async (req, res) => {
  */
 router.get('/init-db/status', async (req, res) => {
     try {
+        // Verificar schema atual
+        const schemaResult = await query('SELECT current_schema()');
+        const currentSchema = schemaResult.rows[0].current_schema;
+        // Listar todos os schemas disponíveis
+        const schemasResult = await query(`
+      SELECT schema_name 
+      FROM information_schema.schemata 
+      WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+    `);
+        // Listar todas as tabelas no schema atual
+        const tablesResult = await query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = current_schema() 
+      AND table_type = 'BASE TABLE'
+    `);
+        // Tentar contar registros nas tabelas que existem
         const tables = ['users', 'systems', 'queries', 'conversations', 'conversation_messages', 'conversation_documents'];
         const status = {};
         for (const table of tables) {
@@ -186,12 +203,22 @@ router.get('/init-db/status', async (req, res) => {
         const allTablesExist = Object.values(status).every((s) => s.exists);
         res.json({
             initialized: allTablesExist,
-            tables: status
+            currentSchema,
+            availableSchemas: schemasResult.rows.map(r => r.schema_name),
+            tablesInCurrentSchema: tablesResult.rows.map(r => r.table_name),
+            tables: status,
+            dbConfig: {
+                host: process.env.DB_HOST,
+                database: process.env.DB_NAME,
+                user: process.env.DB_USER,
+                port: process.env.DB_PORT
+            }
         });
     }
     catch (error) {
         res.status(500).json({
-            error: error.message
+            error: error.message,
+            stack: error.stack
         });
     }
 });

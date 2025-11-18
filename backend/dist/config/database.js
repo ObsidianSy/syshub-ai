@@ -11,6 +11,8 @@ export const pool = new Pool({
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    // Usar schema postgres ao invés do docker
+    options: '-c search_path=postgres,public',
 });
 pool.on('error', (err) => {
     console.error('Erro inesperado no cliente PostgreSQL:', err);
@@ -22,6 +24,7 @@ console.log('🔌 PostgreSQL pool config:', {
     port: process.env.DB_PORT || '5432',
     database: process.env.DB_NAME || 'syshub',
     user: process.env.DB_USER || 'postgres',
+    schema: process.env.DB_SCHEMA || 'public (default)',
 });
 export const query = async (text, params) => {
     const start = Date.now();
