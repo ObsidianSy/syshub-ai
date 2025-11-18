@@ -17,6 +17,7 @@ DB_SCHEMA=docker
 NODE_ENV=production
 PORT=3001
 JWT_SECRET=seu_jwt_secret_aqui
+ADMIN_RESET_TOKEN=seu_token_secreto_para_reset
 ```
 
 ## Webhooks (opcional)
@@ -46,3 +47,22 @@ error: relation "users" does not exist
 2. Vá em **Environment Variables**
 3. Adicione cada variável acima
 4. Clique em **Deploy** para reiniciar com as novas variáveis
+
+---
+
+## Reset de senha (modo seguro)
+
+Caso prefira usar o endpoint de reset em vez de executar SQL manualmente, defina `ADMIN_RESET_TOKEN` como acima e então rode:
+
+```bash
+curl -X POST https://docker-nexushub.q4xusi.easypanel.host/api/admin/reset-password \
+	-H "Content-Type: application/json" \
+	-H "x-admin-token: $ADMIN_RESET_TOKEN" \
+	-d '{"email":"deltagarr@gmail.com","password":"senha123"}'
+```
+
+Se for usar SQL direto, em um host com `psql` disponível você pode executar:
+
+```bash
+docker exec -i docker_iagente psql -U postgres -d docker -c "UPDATE users SET password_hash = '$2a$10$C3rI/N8p5kfe7Fy5/CALQeEfMiYmmGoSeqF6/gXgKNgdRcQ6QyD8S', updated_at = now() WHERE email = 'deltagarr@gmail.com';"
+```
