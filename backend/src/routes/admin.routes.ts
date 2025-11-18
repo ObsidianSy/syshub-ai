@@ -10,7 +10,7 @@ const router = express.Router();
  * Headers: x-admin-token: ADMIN_RESET_TOKEN (from env)
  * Body: { email: string, password: string }
  */
-router.post('/admin/reset-password', async (req, res) => {
+router.post('/reset-password', async (req, res) => {
   try {
     const token = req.headers['x-admin-token'] || req.headers['x-admin-token'.toLowerCase()];
     const adminToken = process.env.ADMIN_RESET_TOKEN;

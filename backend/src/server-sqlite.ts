@@ -13,6 +13,7 @@ import conversationsRoutes from './routes/conversations-sqlite.routes.js';
 import systemsRoutes from './routes/systems-sqlite.routes.js';
 import queriesRoutes from './routes/queries-sqlite.routes.js';
 import agentRoutes from './routes/agent-sqlite.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import agentManagementRoutes from './routes/agent-management.routes.js';
 import conversationDocumentsRoutes from './routes/conversation-documents.routes.js';
 
@@ -55,6 +56,7 @@ app.use('/api/systems', systemsRoutes);
 app.use('/api/queries', queriesRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/agent', agentManagementRoutes); // New: Agent management APIs
+app.use('/api/admin', adminRoutes); // Admin utilities (reset password)
 
 // Diagnóstico SEMPRE disponível (antes do static)
 app.get('/__diag', (req, res) => {
