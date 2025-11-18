@@ -15,6 +15,7 @@ import systemRoutes from './routes/systems.routes.js';
 import queryRoutes from './routes/queries.routes.js';
 import conversationRoutes from './routes/conversations.routes.js';
 import userRoutes from './routes/users.routes.js';
+import initDbRoutes from './routes/init-db.routes.js';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -58,6 +59,7 @@ app.use('/api/systems', systemRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', initDbRoutes); // Database initialization routes
 // Serve static files from frontend build (in production)
 if (process.env.NODE_ENV === 'production') {
     const frontendPath = path.join(__dirname, '../../frontend/dist');
