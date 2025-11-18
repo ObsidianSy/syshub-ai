@@ -104,20 +104,15 @@ if (systemsCount.count === 0) {
   insertSystem.run('Opus One – Estoque', 'opus-one-estoque', 'Estoque', 'online', 'Sistema principal de gestão de estoque', 'Package');
   insertSystem.run('Financeiro Core', 'financeiro-core', 'Financeiro', 'online', 'Módulo central de gestão financeira', 'DollarSign');
   insertSystem.run('N8N Integração', 'n8n-integracao', 'Integração', 'online', 'Automações e webhooks', 'Workflow');
+  
+  console.log('✅ Sistemas padrão inseridos');
 }
 
-// Criar usuário admin Wesley
-const userExists = db.prepare('SELECT id FROM users WHERE email = ?').get('deltagarr@gmail.com');
-if (!userExists) {
-  const passwordHash = bcrypt.hashSync('senha123', 10);
-  db.prepare(`
-    INSERT INTO users (email, password_hash, full_name, role, is_active)
-    VALUES (?, ?, ?, ?, 1)
-  `).run('deltagarr@gmail.com', passwordHash, 'Wesley', 'admin');
-  
-  console.log('✅ Usuário admin criado:');
-  console.log('   Email: deltagarr@gmail.com');
-  console.log('   Senha: senha123');
-}
+// Listar usuários existentes no banco para debug
+const users = db.prepare('SELECT id, email, role FROM users').all();
+console.log('📋 Usuários no banco:', users.length);
+users.forEach((u: any) => {
+  console.log(`   - ${u.email} (ID: ${u.id}, Role: ${u.role})`);
+});
 
 export default db;
