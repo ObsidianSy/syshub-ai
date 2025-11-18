@@ -38,6 +38,20 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Diagnostics route (limited info, no secrets)
+app.get('/__diag', (req, res) => {
+  res.json({
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      DB_HOST: process.env.DB_HOST || null,
+      DB_NAME: process.env.DB_NAME || null,
+      DB_USER: process.env.DB_USER || null,
+      PORT: process.env.PORT || 3001,
+    },
+    uptime: process.uptime(),
+  });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/systems', systemRoutes);
@@ -70,6 +84,13 @@ const startServer = async () => {
     if (!dbConnected) {
       console.error('❌ Não foi possível conectar ao banco de dados');
       process.exit(1);
+    }
+
+    // Log which DB type is being used for clarity
+    if (process.env.DB_HOST) {
+      console.log(`🗄️ Using PostgreSQL at ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
+    } else {
+      console.log('🗄️ Using SQLite (no DB_HOST environment variable provided)');
     }
 
     app.listen(PORT, () => {

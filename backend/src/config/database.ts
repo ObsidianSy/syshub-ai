@@ -21,6 +21,14 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+// Log DB connection information (no secrets)
+console.log('🔌 PostgreSQL pool config:', {
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || '5432',
+  database: process.env.DB_NAME || 'syshub',
+  user: process.env.DB_USER || 'postgres',
+});
+
 export const query = async (text: string, params?: any[]) => {
   const start = Date.now();
   try {

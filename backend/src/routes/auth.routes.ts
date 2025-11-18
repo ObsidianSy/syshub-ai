@@ -81,10 +81,11 @@ router.post('/login', async (req, res) => {
       passwordLength: req.body.password?.length 
     });
     
-    const { email, password } = loginSchema.parse(req.body);
+    let { email, password } = loginSchema.parse(req.body);
+    email = String(email).trim();
 
     // Buscar usuário
-    const result = await query(
+    let result = await query(
       'SELECT * FROM users WHERE email = $1 AND is_active = true',
       [email]
     );
@@ -94,10 +95,24 @@ router.post('/login', async (req, res) => {
       email,
       rowCount: result.rows.length 
     });
-
     if (result.rows.length === 0) {
-      console.log('❌ Usuário não encontrado:', email);
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      console.log('⚠️ Usuario nao encontrado por email exato. Tentando busca case-insensitive.');
+      // fallback case-insensitive search
+      result = await query(
+        'SELECT * FROM users WHERE lower(email) = lower($1) AND is_active = true',
+        [email]
+      );
+
+      console.log('🔍 Case-insensitive query result:', { 
+        found: result.rows.length > 0,
+        email,
+        rowCount: result.rows.length 
+      });
+
+      if (result.rows.length === 0) {
+        console.log('❌ Usuário não encontrado (even case-insensitive):', email);
+        return res.status(401).json({ error: 'Credenciais inválidas' });
+      }
     }
 
     const user = result.rows[0];
