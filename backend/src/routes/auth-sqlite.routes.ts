@@ -126,23 +126,4 @@ router.post('/login', async (req, res) => {
   }
 });
 
-    res.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.full_name,
-        role: user.role,
-      },
-      token,
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.log('❌ Validation error:', error.errors);
-      return res.status(400).json({ error: error.errors[0].message });
-    }
-    console.error('❌ Erro no login:', error);
-    res.status(500).json({ error: 'Erro ao fazer login' });
-  }
-});
-
 export default router;
