@@ -4,7 +4,11 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { testConnection } from './config/database.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Routes
 import authRoutes from './routes/auth.routes.js';
 import systemRoutes from './routes/systems.routes.js';
@@ -15,11 +19,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 // Middlewares
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false, // Disable CSP for serving frontend assets
+    crossOriginEmbedderPolicy: false,
+}));
 app.use(compression());
 app.use(morgan('dev'));
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN || '*',
     credentials: true,
 }));
 app.use(express.json());
@@ -51,6 +58,21 @@ app.use('/api/systems', systemRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/users', userRoutes);
+// Serve static files from frontend build (in production)
+if (process.env.NODE_ENV === 'production') {
+    const frontendPath = path.join(__dirname, '../../frontend/dist');
+    console.log(`📂 Serving frontend from: ${frontendPath}`);
+    app.use(express.static(frontendPath));
+    // Serve index.html for all non-API routes (SPA support)
+    app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api') || req.path.startsWith('/__diag')) {
+            return next();
+        }
+        const indexPath = path.join(frontendPath, 'index.html');
+        console.log(`📄 Serving index.html for ${req.path}`);
+        res.sendFile(indexPath);
+    });
+}
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err);
@@ -60,10 +82,6 @@ app.use((err, req, res, next) => {
             status: err.status || 500,
         },
     });
-});
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ error: 'Rota não encontrada' });
 });
 // Start server
 const startServer = async () => {
