@@ -18,6 +18,7 @@ import queryRoutes from './routes/queries.routes.js';
 import conversationRoutes from './routes/conversations.routes.js';
 import userRoutes from './routes/users.routes.js';
 import initDbRoutes from './routes/init-db.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 dotenv.config();
 
@@ -68,6 +69,7 @@ app.use('/api/queries', queryRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', initDbRoutes); // Database initialization routes
+app.use('/api/admin', adminRoutes); // Admin utilities (reset password)
 
 // Serve static files from frontend build (in production)
 if (process.env.NODE_ENV === 'production') {
